@@ -1,0 +1,8 @@
+{
+  "name": "org.basisvr.contrib.s3hosting",
+  "version": "0.0.0",
+  "displayName": "Contrib.S3Hosting",
+  "description": "Upload BasisVr assets to S3 buckets",
+  "repository":"https://github.com/neon-glowstick/BasisVr-S3Hosting",
+  "dependencies": {}
+}
