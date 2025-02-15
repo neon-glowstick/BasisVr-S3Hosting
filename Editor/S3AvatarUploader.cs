@@ -22,7 +22,6 @@ namespace org.BasisVr.Contrib.S3Hosting
             BasisAvatarSDKInspector.InspectorGuiCreated += OnInspectorGuiCreated;
         }
 
-        private const string ConfigFile = "BasisVrS3UploadConfig.json";
         private static S3Config _config = new();
 
         private static Button _uploadButton;
@@ -30,8 +29,6 @@ namespace org.BasisVr.Contrib.S3Hosting
         private static TextField _secretKeyField;
         private static TextField _serviceUrlField;
         private static TextField _bucketNameField;
-
-        private static string ConfigDirectory => Application.persistentDataPath;
 
         private static void OnInspectorGuiCreated(BasisAvatarSDKInspector inspector)
         {
@@ -94,7 +91,7 @@ namespace org.BasisVr.Contrib.S3Hosting
 
             var loadButton = new Button(() =>
             {
-                _config = LoadConfig();
+                _config = S3Config.Load();
                 _secretKeyField.SetValueWithoutNotify(_config.SecretKey);
                 _accessKeyField.SetValueWithoutNotify(_config.AccessKey);
                 _serviceUrlField.SetValueWithoutNotify(_config.ServiceUrl);
@@ -105,13 +102,13 @@ namespace org.BasisVr.Contrib.S3Hosting
                 style = { flexGrow = -1f }
             };
             crudButtons.Add(loadButton);
-            var saveButton = new Button(() => SaveConfig(_config))
+            var saveButton = new Button(() => S3Config.Save(_config))
             {
                 text = "Save",
                 style = { flexGrow = -1f }
             };
             crudButtons.Add(saveButton);
-            var deleteButton = new Button(DeleteConfig)
+            var deleteButton = new Button(S3Config.Delete)
             {
                 text = "Delete",
                 style = { flexGrow = -1f }
@@ -211,41 +208,6 @@ namespace org.BasisVr.Contrib.S3Hosting
 
             var foundBoth = !string.IsNullOrEmpty(assetBundlePath) && !string.IsNullOrEmpty(metaFilePath);
             return foundBoth;
-        }
-
-        private static S3Config LoadConfig()
-        {
-            var path = Path.Combine(ConfigDirectory, ConfigFile);
-            if (File.Exists(path))
-            {
-                var json = File.ReadAllText(path);
-                var config = JsonUtility.FromJson<S3Config>(json);
-                return config;
-            }
-
-            return new S3Config();
-        }
-
-        private static void SaveConfig(S3Config config)
-        {
-            var directory = ConfigDirectory;
-            if (!Directory.Exists(directory))
-            {
-                Directory.CreateDirectory(directory);
-            }
-
-            var path = Path.Combine(directory, ConfigFile);
-            var json = JsonUtility.ToJson(config);
-            File.WriteAllText(path, json);
-        }
-
-        private static void DeleteConfig()
-        {
-            var path = Path.Combine(ConfigDirectory, ConfigFile);
-            if (File.Exists(path))
-            {
-                File.Delete(path);
-            }
         }
 
         private static TextField PasswordField(string label, string value)
