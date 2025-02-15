@@ -12,104 +12,86 @@ namespace org.BasisVr.Contrib.S3Hosting
             BasisAvatarSDKInspector.InspectorGuiCreated += OnInspectorGuiCreated;
         }
 
-        private static S3Config _config = new();
-
-        private static Button _uploadButton;
-        private static TextField _accessKeyField;
-        private static TextField _secretKeyField;
-        private static TextField _serviceUrlField;
-        private static TextField _bucketNameField;
-
         private static void OnInspectorGuiCreated(BasisAvatarSDKInspector inspector)
         {
-            inspector.rootElement.Add(BuildGui(_config));
+            inspector.rootElement.Add(BuildGui());
         }
 
-        private static VisualElement BuildGui(S3Config config)
+        private static VisualElement BuildGui()
         {
             var container = new Foldout
             {
                 text = "S3 Uploader"
             };
-
-            container.Add(AddConfigFoldout(config));
-
-            _uploadButton = new Button(() =>
-            {
-                _uploadButton.SetEnabled(false);
-                AvatarUploader.Upload(_config);
-                _uploadButton.SetEnabled(true);
-            })
-            {
-                text = "Upload to bucket"
-            };
-            container.Add(_uploadButton);
-
-            return container;
-        }
-
-        private static VisualElement AddConfigFoldout(S3Config config)
-        {
-            var container = new Foldout
+            var configFoldout = new Foldout
             {
                 text = "Config"
             };
-
-            var crudButtons = ConfigCrudButtons();
-            container.Add(crudButtons);
-
-            _accessKeyField = PasswordField("Access key", config.AccessKey);
-            _accessKeyField.RegisterValueChangedCallback(value => config.AccessKey = value.newValue);
-            container.Add(_accessKeyField);
-
-            _secretKeyField = PasswordField("Secret key", config.SecretKey);
-            _secretKeyField.RegisterValueChangedCallback(value => config.SecretKey = value.newValue);
-            container.Add(_secretKeyField);
-
-            _serviceUrlField = Textfield("ServiceUrl", config.ServiceUrl);
-            _serviceUrlField.RegisterValueChangedCallback(value => config.ServiceUrl = value.newValue);
-            container.Add(_serviceUrlField);
-
-            _bucketNameField = Textfield("Bucket name", config.AvatarBucket);
-            _bucketNameField.RegisterValueChangedCallback(value => config.AvatarBucket = value.newValue);
-            container.Add(_bucketNameField);
-
-            return container;
-        }
-
-        private static VisualElement ConfigCrudButtons()
-        {
+            container.Add(configFoldout);
             var crudButtons = new VisualElement
             {
                 style = { flexDirection = FlexDirection.Row }
             };
+            configFoldout.Add(crudButtons);
 
-            var loadButton = new Button(() =>
+            var config = S3Config.Load();
+            var accessKeyField = PasswordField("Access key", config.AccessKey);
+            accessKeyField.RegisterValueChangedCallback(value => config.AccessKey = value.newValue);
+            configFoldout.Add(accessKeyField);
+
+            var secretKeyField = PasswordField("Secret key", config.SecretKey);
+            secretKeyField.RegisterValueChangedCallback(value => config.SecretKey = value.newValue);
+            configFoldout.Add(secretKeyField);
+
+            var serviceUrlField = Textfield("ServiceUrl", config.ServiceUrl);
+            serviceUrlField.RegisterValueChangedCallback(value => config.ServiceUrl = value.newValue);
+            configFoldout.Add(serviceUrlField);
+
+            var bucketNameField = Textfield("Bucket name", config.AvatarBucket);
+            bucketNameField.RegisterValueChangedCallback(value => config.AvatarBucket = value.newValue);
+            configFoldout.Add(bucketNameField);
+
+            var uploadButton = new Button
             {
-                _config = S3Config.Load();
-                _secretKeyField.SetValueWithoutNotify(_config.SecretKey);
-                _accessKeyField.SetValueWithoutNotify(_config.AccessKey);
-                _serviceUrlField.SetValueWithoutNotify(_config.ServiceUrl);
-                _bucketNameField.SetValueWithoutNotify(_config.AvatarBucket);
-            })
-            {
-                text = "Load",
-                style = { flexGrow = -1f }
+                text = "Upload to bucket"
             };
-            crudButtons.Add(loadButton);
-            var saveButton = new Button(() => S3Config.Save(_config))
+            uploadButton.clicked += () =>
+            {
+                uploadButton.SetEnabled(false);
+                AvatarUploader.Upload(config);
+                uploadButton.SetEnabled(true);
+            };
+            container.Add(uploadButton);
+
+            var saveButton = new Button(() => S3Config.Save(config))
             {
                 text = "Save",
                 style = { flexGrow = -1f }
             };
             crudButtons.Add(saveButton);
+
             var deleteButton = new Button(S3Config.Delete)
             {
                 text = "Delete",
                 style = { flexGrow = -1f }
             };
             crudButtons.Add(deleteButton);
-            return crudButtons;
+
+            var loadButton = new Button(() =>
+            {
+                config = S3Config.Load();
+                secretKeyField.SetValueWithoutNotify(config.SecretKey);
+                accessKeyField.SetValueWithoutNotify(config.AccessKey);
+                serviceUrlField.SetValueWithoutNotify(config.ServiceUrl);
+                bucketNameField.SetValueWithoutNotify(config.AvatarBucket);
+            })
+            {
+                text = "Load",
+                style = { flexGrow = -1f }
+            };
+            crudButtons.Add(loadButton);
+
+            return container;
         }
 
         private static TextField PasswordField(string label, string value)
@@ -117,7 +99,7 @@ namespace org.BasisVr.Contrib.S3Hosting
             return new TextField(128, false, true, '•')
             {
                 label = label,
-                value = value
+                value = value,
             };
         }
 
